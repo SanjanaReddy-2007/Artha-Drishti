@@ -1,47 +1,42 @@
-# Artha-Drishti
-Topic-Aware Classifier Recommendation for Sarcasm Detection on Twitter Data (Team 24, G1 slot)
+# Artha-Drishti - topic-aware sarcasm detection
 
-## Folder structure
-```
-artha_drishti_project/
-├── README.md
-├── requirements.txt
-├── src/
-│   ├── load_dataset.py      # loads + standardises the raw dataset
-│   └── topic_tagging.py     # zero-shot topic tagging with sentence embeddings
-├── data/
-│   ├── raw/                 # PUT YOUR ORIGINAL DATASET FILE HERE (never edit it)
-│   └── processed/           # files created by the scripts
-├── models/                  # saved topic definitions (and later, trained models)
-└── results/                 # tables and charts (used in later steps)
-```
+Dataset: iSarcasmEval English training file (`train.En.csv`).
+Pipeline: zero-shot topic tag (3 topics) -> preprocessing -> stratified 80/10/10 split ->
+5 classical models (TF-IDF) + 1 BiGRU (GloVe) -> overall & per-topic evaluation ->
+topic x classifier recommender -> Streamlit demo.
+
+Decisions: classes NOT balanced by default (`--balanced` flag available) - metric is F1 of the
+sarcastic class; emojis converted to words; stratified 80/10/10 with 5-fold CV for tuning;
+GloVe frozen by default (`--trainable` ablation); recommender tie-break = simplest model within 0.01 F1.
 
 ## Setup
-```
+```bash
 pip install -r requirements.txt
 ```
+Put `train.En.csv` anywhere; for the neural model download GloVe (e.g. `glove.twitter.27B.100d.txt`) into `data/`.
 
-## Run (always from the project root folder)
-1. Put your dataset in `data/raw/` (we use the iSarcasmEval English train file, `train.En.csv`).
-2. Load it:
+## Run (from repo root)
+```bash
+bash run_all.sh path/to/train.En.csv data/glove.twitter.27B.100d.txt
 ```
-python src/load_dataset.py --input data/raw/train.En.csv --text-col tweet --label-col sarcastic --sarcastic-value 1
-```
-   Output: `data/processed/tweets_raw.csv`
-3. Tag topics (zero-shot, needs internet on first run to download the ~90 MB model):
-```
-python src/topic_tagging.py
-```
-   Topics and their descriptions are defined at the top of `src/topic_tagging.py` (edit `TOPICS` to change them).
-   Output: `data/processed/tweets_with_topics.csv`, `models/topic_definitions.json`, `results/topic_check_sample.csv`
-4. Open `results/topic_check_sample.csv`, fill the `your_topic` column by hand, and count how often it matches `model_topic`.
-   That agreement rate is your topic-labelling accuracy for the report.
+or stage by stage from `src/`:
 
-## Using the Pislar GitHub repository (Ghosh & Veale data)
-```
-git clone https://github.com/MirunaPislar/Sarcasm-Detection.git
-```
-1. Open `Sarcasm-Detection/res/datasets/ghosh/` and copy the ORIGINAL train/test files (not the token/POS versions) into `data/raw/`.
-2. Look at the format first:  `head -n 5 data/raw/train.txt`   and   `wc -l data/raw/*.txt`
-   (Windows PowerShell: `Get-Content data/raw/train.txt -TotalCount 5`)
-3. Run `src/load_dataset.py` with the matching options (see the examples at the top of that file).
+| Stage | Command | Output |
+|---|---|---|
+| 1a load | `python load_dataset.py --input train.En.csv` | data/tweets_raw.csv |
+| 1b tag | `python topic_tagging.py` | data/tweets_tagged.csv (never drops rows) |
+| 1c missing row | `python find_missing_row.py` | prints rows lost / duplicated |
+| 1d hand-check | `python make_judging_file.py` -> fill `my_topic` in data/judging_file.csv -> `python check_topic_quality.py` | Part A + Part B |
+| 2-3 preprocess | `python preprocess.py --emoji convert` | data/tweets_clean.csv |
+| 5 split | `python split.py` | data/tweets_split.csv |
+| 9-11 classical | `python classical_models.py` | results/preds_*, models/*.joblib |
+| 6-8 neural | `python neural_model.py --glove ...` (`--trainable --tag BiGRU_trainable` for ablation) | results/preds_BiGRU_* |
+| 12 evaluate | `python evaluate.py`, `python learning_curves.py [--neural]` | results/*.csv, *.png |
+| 13 recommender | `python recommender.py` | results/recommender.json |
+| 14 demo | `streamlit run demo/app.py` | |
+
+## Notes
+* `topic_tagging.py --backend keyword` is an offline smoke-test tagger only - never report its numbers.
+* All code was smoke-tested on synthetic data; the neural model, zero-shot tagger and Streamlit demo
+  need `torch`, `transformers`, `streamlit` and were NOT executed in the build environment.
+* Model selection uses the validation split; the test split is touched only by `evaluate.py`.
