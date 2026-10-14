@@ -1,4 +1,9 @@
-pandas
-numpy
-scikit-learn
-joblib
+pandas>=1.5
+numpy>=1.23
+scikit-learn>=1.2
+matplotlib>=3.6
+joblib>=1.2
+emoji>=2.8
+torch>=2.0
+transformers>=4.35
+streamlit>=1.30
