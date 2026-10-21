@@ -1,0 +1,47 @@
+{
+ "timestamp_utc": "2026-10-20T12:46:05+00:00",
+ "python": "3.12.7",
+ "platform": "Windows-11-10.0.26200-SP0",
+ "scikit_learn": "1.9.1",
+ "seed": 42,
+ "features": "word",
+ "feature_description": "TF-IDF, word 1-2 grams, min_df=2, sublinear tf, max 20,000 features",
+ "cv_folds": 5,
+ "n_bootstrap": 1000,
+ "emoji_conversion_available": true,
+ "git_commit": "1ff71d2",
+ "smoke_test": false,
+ "train_rows_used": 2760,
+ "split_summary": {
+  "train": {
+   "n": 2760,
+   "n_sarcastic": 690,
+   "sarcastic_share": 0.25
+  },
+  "val": {
+   "n": 345,
+   "n_sarcastic": 86,
+   "sarcastic_share": 0.2493
+  },
+  "test": {
+   "n": 345,
+   "n_sarcastic": 86,
+   "sarcastic_share": 0.2493
+  }
+ },
+ "models_requested": [
+  "SVM",
+  "SVM_balanced",
+  "LogReg",
+  "LogReg_balanced",
+  "NaiveBayes",
+  "DecisionTree",
+  "RandomForest",
+  "KNN",
+  "GradientBoosting",
+  "MLP",
+  "XGBoost"
+ ],
+ "default_model": "LogReg_balanced",
+ "selection_rule": "highest validation PR-AUC; models within tolerance are tied; simplest wins"
+}

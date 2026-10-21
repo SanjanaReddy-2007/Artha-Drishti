@@ -1,0 +1,3 @@
+# Optional: enables the XGBoost candidate. Without it, XGBoost is recorded as "skipped"
+# (scikit-learn GradientBoosting is always trained and reported separately).
+xgboost>=2.0

@@ -1,0 +1,19 @@
+{
+ "name": "LogReg_balanced",
+ "selection_metric": "validation pr_auc",
+ "tie_tolerance": 0.01,
+ "best_value": 0.4404543934948561,
+ "chosen_value": 0.4404543934948561,
+ "tied_candidates": [
+  "LogReg_balanced"
+ ],
+ "rule": "highest validation PR-AUC; models within tolerance are tied; simplest wins",
+ "threshold_default": {
+  "value": 0.5,
+  "strict": true
+ },
+ "threshold_validation_selected": {
+  "value": 0.49549311394151463,
+  "strict": false
+ }
+}

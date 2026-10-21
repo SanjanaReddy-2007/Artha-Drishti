@@ -1,0 +1,50 @@
+{
+ "SVM": {
+  "status": "completed",
+  "reason": ""
+ },
+ "SVM_balanced": {
+  "status": "completed",
+  "reason": ""
+ },
+ "LogReg": {
+  "status": "completed",
+  "reason": ""
+ },
+ "LogReg_balanced": {
+  "status": "completed",
+  "reason": ""
+ },
+ "NaiveBayes": {
+  "status": "completed",
+  "reason": ""
+ },
+ "DecisionTree": {
+  "status": "completed",
+  "reason": ""
+ },
+ "RandomForest": {
+  "status": "completed",
+  "reason": ""
+ },
+ "KNN": {
+  "status": "completed",
+  "reason": ""
+ },
+ "GradientBoosting": {
+  "status": "completed",
+  "reason": ""
+ },
+ "MLP": {
+  "status": "completed",
+  "reason": ""
+ },
+ "XGBoost": {
+  "status": "completed",
+  "reason": ""
+ },
+ "GloVe_BiGRU": {
+  "status": "pending",
+  "reason": "Future phase: not implemented in this baseline."
+ }
+}

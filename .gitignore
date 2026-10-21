@@ -1,9 +1,20 @@
+# environments / caches
+.venv/
+venv/
 __pycache__/
 *.pyc
-data/*.csv
-data/glove*
-models/*
+.pytest_cache/
+.ipynb_checkpoints/
+# large or regenerable artefacts
+models/*.joblib
+data/processed.csv
+data/*.zip
+*.zip
+glove*.txt
+glove*.zip
+logs/*.log
+# keep folder skeletons
 !models/.gitkeep
-results/*
-!results/.gitkeep
-.venv/
+!data/.gitkeep
+!logs/.gitkeep
+.env
