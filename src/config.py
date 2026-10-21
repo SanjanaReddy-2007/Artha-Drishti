@@ -50,4 +50,5 @@ class ProjectPaths:
         for p in (self.data, self.models, self.results, self.logs,
                   self.model_results, self.predictions):
             p.mkdir(parents=True, exist_ok=True)
+        self.raw_file.parent.mkdir(parents=True, exist_ok=True)
         return self
