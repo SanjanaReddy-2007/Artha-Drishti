@@ -82,8 +82,7 @@ def render():
     st.caption("Dashed line = sarcastic share, the PR-AUC of random scores.")
 
     st.subheader("Training and inference time")
-    tdf = df.melt(id_var
-    =["model"], value_vars=["tuning_time_s", "final_fit_time_s"], var_name="kind", value_name="seconds")
+    tdf = df.melt(id_vars=["model"], value_vars=["tuning_time_s", "final_fit_time_s"], var_name="kind", value_name="seconds")
     tdf["kind"] = tdf.kind.map({"tuning_time_s": "Hyper-parameter tuning (5-fold CV grid)", "final_fit_time_s": "Final fit"})
     st.altair_chart(alt.Chart(tdf).mark_bar().encode(
         x=alt.X("model:N", title=None, axis=alt.Axis(labelAngle=-40, labelOverlap=False, labelLimit=200)), y=alt.Y("seconds:Q", title="Seconds"),
