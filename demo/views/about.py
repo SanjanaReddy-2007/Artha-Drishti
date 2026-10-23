@@ -9,6 +9,11 @@ def render():
     st.title("About the Project")
     st.info("This site presents a **text-only, topic-independent baseline**. Topic-aware modelling is a planned later extension.")
     st.markdown("""
+### Pages of this site
+Home; Sarcasm Detector (one tweet); Batch Detector (upload a CSV or .txt of tweets, classify all of them, download the
+results); Model Comparison; Model Performance; About the Project. Both detector pages use the same saved models,
+preprocessing and thresholds.
+
 ### Problem statement
 Given an English tweet, decide whether it is **sarcastic** or **not sarcastic** (binary classification; sarcastic = positive class).
 

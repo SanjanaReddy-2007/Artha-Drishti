@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import re
+from typing import Callable, Sequence
 from dataclasses import asdict, dataclass
 
 import joblib
+import numpy as np
 
 from src import results_io as rio
-from src.config import MAX_INPUT_CHARS, TWEET_CHARS, ProjectPaths
+from src.config import BATCH_CHUNK_SIZE, MAX_INPUT_CHARS, TWEET_CHARS, ProjectPaths
 from src.models import SCORE_LABELS, get_scores
 from src.preprocess import EMOJI_AVAILABLE, clean_text
 from src.evaluate import decide
@@ -81,3 +83,44 @@ class Predictor:
         return asdict(Prediction("Sarcastic" if is_s else "Not Sarcastic", is_s, score,
                                  SCORE_LABELS[detail["score_type"]], th["value"], threshold_type, name,
                                  detail["display"], cleaned, warns))
+
+    def predict_batch(self, texts: Sequence[str], model_name: str | None = None,
+                      threshold_type: str = "validation_selected",
+                      progress: Callable[[float], None] | None = None,
+                      chunk_size: int = BATCH_CHUNK_SIZE) -> dict:
+        """Score many RAW tweets in one call, using exactly the same steps as predict():
+        clean_text -> saved pipeline -> get_scores -> decide(saved threshold).
+        Returns arrays aligned with `texts`: labels, is_sarcastic, scores, plus the threshold info.
+        Callers must pass only valid texts (see src.batch.prepare_rows); invalid ones raise InputError
+        here, exactly as predict() would. `progress(fraction)` is called after each chunk."""
+        name = model_name or self.default_model_name()
+        if name is None or name not in self.available_models():
+            raise FileNotFoundError("No trained model found. Run: python -m src.train")
+        if threshold_type not in ("default", "validation_selected"):
+            raise ValueError("threshold_type must be 'default' or 'validation_selected'")
+        cleaned = []
+        for i, t in enumerate(texts):
+            try:
+                t = self.validate(t)
+                c = clean_text(t)
+                if not re.search(r"[a-z]", c):
+                    raise InputError("The text contains no readable English words after cleaning.")
+            except InputError as e:
+                raise InputError(f"Item {i}: {e}") from None
+            cleaned.append(c)
+        detail = rio.load_model_detail(self.paths, name)
+        th = detail["thresholds"][threshold_type]
+        pipe = self._pipeline(name)
+        scores = np.empty(len(cleaned), dtype=float)
+        step = max(1, int(chunk_size))
+        for start in range(0, len(cleaned), step):
+            part = cleaned[start:start + step]
+            scores[start:start + len(part)] = get_scores(pipe, part)
+            if progress:
+                progress(min(1.0, (start + len(part)) / max(1, len(cleaned))))
+        is_s = decide(scores, th["value"], th["strict"]).astype(bool) if len(scores) else np.zeros(0, dtype=bool)
+        return {"labels": ["Sarcastic" if x else "Not Sarcastic" for x in is_s],
+                "is_sarcastic": is_s, "scores": scores, "cleaned": cleaned,
+                "threshold": float(th["value"]), "threshold_type": threshold_type,
+                "model_name": name, "model_display": detail["display"],
+                "score_meaning": SCORE_LABELS[detail["score_type"]]}

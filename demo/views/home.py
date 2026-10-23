@@ -14,7 +14,8 @@ def render():
     st.write("Sarcasm says one thing and means another, so a model that only reads the literal words can get the "
              "sentiment of a tweet exactly backwards. Detecting it is a hard, open problem in natural language "
              "processing, and it matters for opinion mining, moderation and social-media analysis.")
-    st.success("**Try it:** open **Sarcasm Detector** in the sidebar and analyse a tweet.")
+    st.success("**Try it:** open **Sarcasm Detector** in the sidebar and analyse a tweet, or use **Batch Detector** "
+               "to classify a whole CSV file of tweets.")
 
     st.subheader("Dataset and experiment")
     rep = rio.load_data_report(paths)

@@ -14,6 +14,12 @@ LABEL_COLUMNS = ("sarcastic", "label", "Sarcastic")
 TWEET_CHARS = 280
 MAX_INPUT_CHARS = 1000
 
+# Batch Detector limits (adjustable). Uploads above either limit are rejected with a message.
+BATCH_MAX_ROWS = 5000
+BATCH_MAX_MB = 5
+BATCH_CHUNK_SIZE = 500               # rows scored per step (drives the progress bar)
+BATCH_ENCODINGS = ("utf-8", "utf-8-sig", "latin-1")
+
 # Default-model selection rule (validation data only, never the test set).
 SELECTION_METRIC = "pr_auc"          # threshold-independent
 TIE_TOLERANCE = 0.01                 # models within 0.01 of the best count as tied
