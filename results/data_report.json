@@ -1,0 +1,40 @@
+{
+  "raw_file": "data/raw/train.En.csv",
+  "n_rows_raw": 3468,
+  "columns_in_file": [
+    "Unnamed: 0",
+    "tweet",
+    "sarcastic",
+    "rephrase",
+    "sarcasm",
+    "irony",
+    "satire",
+    "understatement",
+    "overstatement",
+    "rhetorical_question"
+  ],
+  "text_column": "tweet",
+  "label_column": "sarcastic",
+  "columns_ignored_to_prevent_leakage": [
+    "Unnamed: 0",
+    "rephrase",
+    "sarcasm",
+    "irony",
+    "satire",
+    "understatement",
+    "overstatement",
+    "rhetorical_question"
+  ],
+  "n_missing_or_blank_text": 1,
+  "n_invalid_label": 0,
+  "n_rows_after_validation": 3467,
+  "n_empty_after_cleaning": 0,
+  "n_duplicate_groups_conflicting_labels_dropped": 5,
+  "n_duplicate_texts_dropped": 5,
+  "n_rows_final": 3450,
+  "n_sarcastic": 862,
+  "n_not_sarcastic": 2588,
+  "sarcastic_share": 0.2499,
+  "emoji_conversion": true,
+  "processed_file": "data/processed.csv"
+}

@@ -1,42 +1,100 @@
-# Artha-Drishti - topic-aware sarcasm detection
+# Artha-Drishti - Machine Learning-Based Sarcasm Detection in English Tweets
 
-Dataset: iSarcasmEval English training file (`train.En.csv`).
-Pipeline: zero-shot topic tag (3 topics) -> preprocessing -> stratified 80/10/10 split ->
-5 classical models (TF-IDF) + 1 BiGRU (GloVe) -> overall & per-topic evaluation ->
-topic x classifier recommender -> Streamlit demo.
+Owner: Are Sanjana Reddy (24BDS0187) | Task: binary sarcasm detection (Sarcastic / Not Sarcastic) | Interface: Streamlit
 
-Decisions: classes NOT balanced by default (`--balanced` flag available) - metric is F1 of the
-sarcastic class; emojis converted to words; stratified 80/10/10 with 5-fold CV for tuning;
-GloVe frozen by default (`--trainable` ablation); recommender tie-break = simplest model within 0.01 F1.
+This build is a **text-only, topic-independent baseline**: ten scikit-learn candidates (plus XGBoost if installed) are trained
+on the same data, split and protocol, saved to disk, and shown in a website that reads only **real saved results**.
+Nothing in the repository contains pre-filled metrics; until you train, the dashboard says "pending".
 
-## Setup
-```bash
-pip install -r requirements.txt
+## Status of this build (read this first)
+
+| Item | Status |
+|---|---|
+| Code: data validation, cleaning, leakage-safe split, 10 models, evaluation, bootstrap CIs, predictor, 5-page website | **Written** |
+| 22 unit/integration tests (1 skipped: needs the `emoji` package) | **Passed in my sandbox on SYNTHETIC data only** |
+| Website page code executed with stubbed Streamlit/Altair (catches my own bugs, not Streamlit-API misuse) | **Passed in my sandbox** |
+| Run on the **real** iSarcasmEval file | **NOT DONE** - the dataset was not available to me. Run the commands below. |
+| Website launched in a real browser | **NOT DONE** - Streamlit was not installable in my sandbox. Please verify with `streamlit run demo\app.py`. |
+| XGBoost | **Untested** here (not installed); recorded as "skipped" if it is missing |
+| GloVe + BiGRU | **Pending** (future phase; shown as pending on the dashboard) |
+| Literature review / novelty check | **NOT DONE** - see `docs/LITERATURE_REVIEW_STATUS.md`. Do not claim novelty. |
+| Git branch / push | **NOT DONE** - I had no access to your repository. See `MERGE_GUIDE.md`. |
+| Calibration of probabilities | **Not done**; scores are labelled "uncalibrated" |
+
+Previously recorded numbers (3,456 tweets; SVM validation F1 0.360; ...) are historical. This code recomputes everything;
+`python -m src.prepare_data` prints the real raw row count (this also settles whether the file has 3,456 or 3,468 rows).
+
+## Setup (Windows PowerShell, Python 3.12)
+
+```powershell
+cd C:\Users\User\Downloads\Artha-Drishti
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install --default-timeout=120 --retries 10 -r requirements.txt
+pip install --default-timeout=120 --retries 10 -r requirements-optional.txt   # optional: xgboost
 ```
-Put `train.En.csv` anywhere; for the neural model download GloVe (e.g. `glove.twitter.27B.100d.txt`) into `data/`.
 
-## Run (from repo root)
-```bash
-bash run_all.sh path/to/train.En.csv data/glove.twitter.27B.100d.txt
+## Train (one stage at a time; check each output before the next)
+
+```powershell
+# 0. put the iSarcasmEval file at data\train.En.csv
+mkdir logs -ErrorAction SilentlyContinue
+python -m src.prepare_data 2>&1 | Tee-Object logs\prepare_data.txt     # validates + cleans; read results\data_report.json
+python -m src.split 2>&1 | Tee-Object logs\split.txt                   # saves results\split_indices.json (stratified on label)
+python -m src.train --models SVM,LogReg --limit 300 --cv-folds 3       # SMOKE TEST ONLY (flagged in results, shown as a red banner)
+python -m src.train 2>&1 | Tee-Object logs\train.txt                   # the real run (all models)
+python -m unittest discover -s tests -t .                              # tests
 ```
-or stage by stage from `src/`:
+Re-using the split from the earlier project (same train/val/test membership):
+`python -m src.split --import-existing --train-csv <train.csv> --val-csv <val.csv> --test-csv <test.csv> --text-col <col> --force`.
+A smoke test overwrites `results\` and `models\`; delete them (or re-run the full training) before reporting anything.
+Options: `--features word_char` (adds character n-grams), `--n-jobs 4`, `--bootstrap 1000`, `--models A,B`.
+Model names: SVM, SVM_balanced, LogReg, LogReg_balanced, NaiveBayes, DecisionTree, RandomForest, KNN, GradientBoosting, MLP, XGBoost.
 
-| Stage | Command | Output |
-|---|---|---|
-| 1a load | `python load_dataset.py --input train.En.csv` | data/tweets_raw.csv |
-| 1b tag | `python topic_tagging.py` | data/tweets_tagged.csv (never drops rows) |
-| 1c missing row | `python find_missing_row.py` | prints rows lost / duplicated |
-| 1d hand-check | `python make_judging_file.py` -> fill `my_topic` in data/judging_file.csv -> `python check_topic_quality.py` | Part A + Part B |
-| 2-3 preprocess | `python preprocess.py --emoji convert` | data/tweets_clean.csv |
-| 5 split | `python split.py` | data/tweets_split.csv |
-| 9-11 classical | `python classical_models.py` | results/preds_*, models/*.joblib |
-| 6-8 neural | `python neural_model.py --glove ...` (`--trainable --tag BiGRU_trainable` for ablation) | results/preds_BiGRU_* |
-| 12 evaluate | `python evaluate.py`, `python learning_curves.py [--neural]` | results/*.csv, *.png |
-| 13 recommender | `python recommender.py` | results/recommender.json |
-| 14 demo | `streamlit run demo/app.py` | |
+## Launch the website
 
-## Notes
-* `topic_tagging.py --backend keyword` is an offline smoke-test tagger only - never report its numbers.
-* All code was smoke-tested on synthetic data; the neural model, zero-shot tagger and Streamlit demo
-  need `torch`, `transformers`, `streamlit` and were NOT executed in the build environment.
-* Model selection uses the validation split; the test split is touched only by `evaluate.py`.
+```powershell
+streamlit run demo\app.py
+```
+Pages: Home, Sarcasm Detector, Model Comparison, Model Performance, About the Project.
+If no model has been trained, pages show instructions instead of numbers. Models are loaded once from `models\*.joblib`; nothing is retrained on a request.
+
+## Layout
+
+```
+src/config.py        paths (relative to project root), constants, default-model rule
+src/preprocess.py    stateless text cleaning (+ emoji -> words)
+src/data.py          load/validate/clean/de-duplicate -> data/processed.csv, results/data_report.json
+src/split.py         stratified split saved as row_id lists; leakage verification; import of an older split
+src/features.py      TF-IDF configs (vocabulary learned on training data only, inside the Pipeline)
+src/models.py        model registry + grids (Maximum Entropy == LogReg, not duplicated)
+src/evaluate.py      metrics, thresholds, baselines, bootstrap CIs, paired bootstrap, timing
+src/train.py         tune on train -> validation (threshold + default model) -> test; saves everything
+src/results_io.py    reads saved results (no Streamlit) ; src/predict.py  prediction service
+demo/                Streamlit app (app.py, ui.py, views/)
+tests/               unittest suite (synthetic data, tmp dirs)
+docs/PROTOCOL.md     exact evaluation protocol ; docs/LITERATURE_REVIEW_*  (pending)
+legacy_topic_aware/  place for your old topic-aware code (see its README)
+results/ models/ logs/   generated artefacts (models/*.joblib are git-ignored)
+```
+
+## Saved artefacts (all generated by `src.train`)
+
+`results/metrics.csv` (model x stage x threshold), `results/baselines.csv`, `results/status.json` (completed / failed / skipped / pending),
+`results/default_model.json`, `results/run_metadata.json` (versions, seed, git commit, smoke-test flag), `results/models/<name>.json`
+(config, params, thresholds, reports, bootstrap CIs, threshold table), `results/predictions/<name>_{validation,test}.csv` (scores used for PR curves),
+`models/<name>.joblib`, `logs/train_<time>.log`. Pickled scikit-learn models require the same scikit-learn version to load.
+
+## Known limitations
+
+* Small dataset; the ~350-tweet validation and test sets give wide confidence intervals - treat F1 gaps below ~0.05 as noise.
+* Thresholds tuned on a small validation set are noisy. Test results at the validation-selected threshold are honest but can still be unlucky.
+* Scores are uncalibrated. Text-only; no conversational context. Single English dataset.
+* Default-model selection uses validation PR-AUC (threshold-independent) with a tie rule; other rules are possible and would be a documented change.
+* The class-weighted variants can be chosen as default if they win on validation; they are reported as a separate experiment group in the dashboard.
+
+## Suggested next experiment (to confirm with your real results)
+
+Once real results exist: (1) check whether any model beats the always-sarcastic F1 baseline and the PR-AUC random level with non-overlapping
+bootstrap CIs; (2) compare `word` vs `word_char` features with the paired bootstrap; (3) add calibration; (4) then add GloVe + BiGRU
+under the same protocol; (5) only then re-attach topic tags for the topic-aware extension.
