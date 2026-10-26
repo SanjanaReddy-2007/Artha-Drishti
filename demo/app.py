@@ -8,12 +8,13 @@ if str(ROOT) not in sys.path:
 
 import streamlit as st  # noqa: E402
 
-from demo import ui  # noqa: E402
+from demo import polish, ui  # noqa: E402
 from demo.views import about, batch, comparison, detector, home, performance  # noqa: E402
 from src import results_io as rio  # noqa: E402
 
 st.set_page_config(page_title="Artha-Drishti | Sarcasm Detection", page_icon="🔍", layout="wide")
 ui.inject_css()
+polish.inject()
 
 PAGES = {"Home": home, "Sarcasm Detector": detector, "Batch Detector": batch, "Model Comparison": comparison,
          "Model Performance": performance, "About the Project": about}

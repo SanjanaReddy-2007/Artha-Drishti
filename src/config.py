@@ -15,10 +15,18 @@ TWEET_CHARS = 280
 MAX_INPUT_CHARS = 1000
 
 # Batch Detector limits (adjustable). Uploads above either limit are rejected with a message.
+# BATCH_MAX_ROWS and BATCH_MAX_MB apply to EACH uploaded file.
 BATCH_MAX_ROWS = 5000
 BATCH_MAX_MB = 5
 BATCH_CHUNK_SIZE = 500               # rows scored per step (drives the progress bar)
 BATCH_ENCODINGS = ("utf-8", "utf-8-sig", "latin-1")
+
+# Multi-file Batch Detector: limits across ALL files uploaded together (keeps Streamlit Cloud responsive).
+BATCH_MAX_FILES = 50                 # files per run
+BATCH_MAX_TOTAL_ROWS = 25000         # rows summed over all files in one run
+
+# Sarcasm Detector page: one tweet per line, up to this many tweets per click.
+MULTI_TWEET_MAX = 200
 
 # Default-model selection rule (validation data only, never the test set).
 SELECTION_METRIC = "pr_auc"          # threshold-independent
