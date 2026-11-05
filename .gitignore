@@ -6,7 +6,6 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 # large or regenerable artefacts
-models/*.joblib
 data/processed.csv
 data/*.zip
 *.zip
